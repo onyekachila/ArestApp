@@ -8,6 +8,11 @@ use App\Traits\ApiResponser;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Http\Client\Exception\HttpException;
+use Illuminate\Database\QueryException;
 
 class Handler extends ExceptionHandler
 {
@@ -65,7 +70,41 @@ class Handler extends ExceptionHandler
         if ($exception instanceof AuthenticationException) {
             return $this->unauthenticated($request, $exception);
         }
-        return parent::render($request, $exception);
+
+        // Authorization exception handling
+        if ($exception instanceof AuthorizationException) {
+            return $this->errorResponse($exception->getMessage(), 403);
+        }
+
+        // Handling http not found exception
+        if ($exception instanceof NotFoundHttpException) {
+            return $this->errorResponse('The specified URL cannot be found', 404);
+        }
+
+        // Handling methods not allowed exception
+        if ($exception instanceof MethodNotAllowedHttpException) {
+            return $this->errorResponse('The specified method for the request is invalid', 405);
+        }
+
+        // Handling any type of http exception
+        if ($exception instanceof HttpException) {
+            return $this->errorResponse($exception->getMessage(), $exception->getStatusCode());
+        }
+
+        // Handling query exception
+        if ($exception instanceof QueryException) {
+            $errorCode = $exception->errorInfo[1];
+
+            if ($errorCode == 1451) {
+                return $this->errorResponse('Cannot remove this resource permanently. It is related with another resource', 409);
+            }
+        }
+
+        if (config('app.debug')) {
+            return parent::render($request, $exception);
+        }
+
+        return $this->errorResponse('Unexpected Exception. Try later', 500);
     }
    
     /**
