@@ -5,9 +5,14 @@ namespace App;
 use App\User;
 use App\Transaction;
 use App\Scopes\BuyerScope;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Buyer extends User
 {
+    use SoftDeletes;
+
+    protected $dates = ['deleted_at']; 
+    
     protected static function boot()
     {
         parent::boot();
