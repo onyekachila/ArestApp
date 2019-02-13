@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Category;
 use App\Buyer;
 use App\Transaction;
+use App\Seller;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
@@ -43,7 +44,7 @@ class Product extends Model
 
     public function seller()
     {
-        return $this->belongTo(Seller::class);
+        return $this->belongsTo(Seller::class);
     }
 
     public function transactions()
